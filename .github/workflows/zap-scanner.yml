@@ -29,19 +29,11 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Format Target Label
-        id: target_label
-        run: |
-          TARGET="${{ inputs.target_url || 'https://staging.example.com' }}"
-          CLEAN_LABEL=\((echo "\)TARGET" | sed -E 's/https?:\/\///; s/[^a-zA-Z0-9]/_/g')
-          echo "clean_name=\(CLEAN_LABEL" >> "\)GITHUB_OUTPUT"
-          echo "target_uri=\(TARGET" >> "\)GITHUB_OUTPUT"
-
       - name: Run OWASP ZAP Baseline Scan
         if: ${{ inputs.scan_type == 'baseline' || inputs.scan_type == '' }}
         uses: zaproxy/action-baseline@v0.14.0
         with:
-          target: '${{ steps.target_label.outputs.target_uri }}'
+          target: '${{ inputs.target_url || 'https://staging.example.com' }}'
           token: ${{ secrets.GITHUB_TOKEN }}
           fail_action: false
           docker_name: 'zaproxy/zap-stable'
@@ -51,28 +43,23 @@ jobs:
         if: ${{ inputs.scan_type == 'full' }}
         uses: zaproxy/action-full-scan@v0.12.0
         with:
-          target: '${{ steps.target_label.outputs.target_uri }}'
+          target: '${{ inputs.target_url }}'
           token: ${{ secrets.GITHUB_TOKEN }}
           token_type: 'GITHUB_TOKEN'
           cmd_options: '-r report_html.html -J report_json.json -w report_md.md'
 
-      - name: Publish Report Summary to GitHub UI
+      - name: Publish Markdown Summary
         if: always()
         run: |
-          echo "## 🛡️ OWASP ZAP Vulnerability Report" >> "$GITHUB_STEP_SUMMARY"
-          echo "**Target Scanned:** \`\({{ steps.target_label.outputs.target_uri }}\`" >> "\)GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          if [ -f "report_md.md" ]; then
-            cat report_md.md >> "$GITHUB_STEP_SUMMARY"
-          else
-            echo "⚠️ Markdown report file was not generated." >> "$GITHUB_STEP_SUMMARY"
-          fi
+          echo "## 🛡️ OWASP ZAP Scan Summary" >> $GITHUB_STEP_SUMMARY
+          echo "Target: \({{ inputs.target_url || 'https://staging.example.com' }}" >>\)GITHUB_STEP_SUMMARY
+          [ -f report_md.md ] && cat report_md.md >> \(GITHUB_STEP_SUMMARY || echo "No Markdown report produced." >>\)GITHUB_STEP_SUMMARY
 
       - name: Upload Report Artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: zap-report-${{ steps.target_label.outputs.clean_name }}
+          name: zap-vulnerability-report
           path: |
             report_html.html
             report_json.json
