@@ -1,3 +1,4 @@
+```yaml
 name: OWASP ZAP Baseline Scan
 
 run-name: ZAP Scan on ${{ inputs.target_url || 'https://owasp.org/www-project-webgoat' }}
@@ -13,6 +14,10 @@ on:
         description: "Target URL to scan"
         required: true
         default: "https://owasp.org/www-project-webgoat"
+
+permissions:
+  contents: read
+  issues: write
 
 jobs:
   zap_scan:
@@ -42,3 +47,5 @@ jobs:
             report_json.json
             report_md.md
           if-no-files-found: warn
+```
+
