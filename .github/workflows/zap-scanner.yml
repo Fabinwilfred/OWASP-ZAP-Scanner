@@ -48,4 +48,3 @@ jobs:
             report_md.md
           if-no-files-found: warn
 ```
-
