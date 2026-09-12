@@ -1,7 +1,0 @@
-name: OWASP ZAP Scan
-
-on:
-  workflow_dispatch: # Manually trigger the workflow
-  push:
-    branches:
-      - main

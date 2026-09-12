@@ -3,9 +3,9 @@ name: OWASP ZAP Scan
 # Define events that trigger the workflow
 on:
   workflow_dispatch:  # Allows manual trigger of the workflow
-  push:
-    branches:
-      - main  # Triggers the workflow on a push to the main branch
+#  push:
+#    branches:
+#      - main  # Triggers the workflow on a push to the main branch
 
 # Define jobs for the workflow
 jobs:
