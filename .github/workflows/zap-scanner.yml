@@ -1,16 +1,18 @@
 name: OWASP ZAP Baseline Scan
 
-run-name: ZAP Scan on ${{ inputs.target_url || 'https://staging.example.com' }}
+run-name: ZAP Scan on ${{ inputs.target_url || 'https://owasp.org/www-project-webgoat' }}
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - main
+
   workflow_dispatch:
     inputs:
       target_url:
-        description: 'Target URL to scan'
+        description: "Target URL to scan"
         required: true
-        default: 'https://owasp.org/www-project-webgoat'
+        default: "https://owasp.org/www-project-webgoat"
 
 jobs:
   zap_scan:
@@ -24,17 +26,11 @@ jobs:
       - name: Run OWASP ZAP Baseline Scan
         uses: zaproxy/action-baseline@v0.14.0
         with:
-          target: '${{ inputs.target_url || 'https://staging.example.com' }}'
+          target: ${{ inputs.target_url || 'https://owasp.org/www-project-webgoat' }}
           token: ${{ secrets.GITHUB_TOKEN }}
           fail_action: false
-          docker_name: 'zaproxy/zap-stable'
-          cmd_options: '-r report_html.html -J report_json.json -w report_md.md'
-
-      - name: Render GitHub Summary Page
-        if: always()
-        uses: zaproxy/action-summary@v0.2.0
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          docker_name: "zaproxy/zap-stable"
+          cmd_options: "-r report_html.html -J report_json.json -w report_md.md"
 
       - name: Upload Report Artifacts
         if: always()
