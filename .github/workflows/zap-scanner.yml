@@ -48,12 +48,11 @@ jobs:
           token_type: 'GITHUB_TOKEN'
           cmd_options: '-r report_html.html -J report_json.json -w report_md.md'
 
-      - name: Publish Markdown Summary
+      - name: Publish Action Summary
         if: always()
-        run: |
-          echo "## 🛡️ OWASP ZAP Scan Summary" >> $GITHUB_STEP_SUMMARY
-          echo "Target: \({{ inputs.target_url || 'https://staging.example.com' }}" >>\)GITHUB_STEP_SUMMARY
-          [ -f report_md.md ] && cat report_md.md >> \(GITHUB_STEP_SUMMARY || echo "No Markdown report produced." >>\)GITHUB_STEP_SUMMARY
+        uses: zaproxy/action-summary@v0.2.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Report Artifacts
         if: always()
