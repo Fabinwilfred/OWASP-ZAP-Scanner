@@ -1,6 +1,6 @@
 name: OWASP ZAP Security Runner
 
-run-name: ZAP Scan on ${{ github.event.inputs.target_url || 'Default Target' }}
+run-name: ZAP Scan on ${{ inputs.target_url || 'https://staging.example.com' }}
 
 on:
   push:
@@ -31,17 +31,14 @@ jobs:
 
       - name: Format Target Label
         id: target_label
-        env:
-          INPUT_TARGET: ${{ github.event.inputs.target_url }}
         run: |
-          # Use default target if input string is empty
-          TARGET="${INPUT_TARGET:-https://staging.example.com}"
-          CLEAN_LABEL=\((echo "\)TARGET" | sed -e 's/https\?:\/\///' -e 's/[^a-zA-Z0-9]/_/g')
+          TARGET="${{ inputs.target_url || 'https://staging.example.com' }}"
+          CLEAN_LABEL=\((echo "\)TARGET" | sed -E 's/https?:\/\///; s/[^a-zA-Z0-9]/_/g')
           echo "clean_name=\(CLEAN_LABEL" >> "\)GITHUB_OUTPUT"
           echo "target_uri=\(TARGET" >> "\)GITHUB_OUTPUT"
 
       - name: Run OWASP ZAP Baseline Scan
-        if: ${{ inputs.scan_type == 'baseline' || github.event_name == 'push' }}
+        if: ${{ inputs.scan_type == 'baseline' || inputs.scan_type == '' }}
         uses: zaproxy/action-baseline@v0.14.0
         with:
           target: '${{ steps.target_label.outputs.target_uri }}'
