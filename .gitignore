@@ -1,0 +1,5 @@
+zap-reports/
+report_html.html
+report_json.json
+report_md.md
+*.log
