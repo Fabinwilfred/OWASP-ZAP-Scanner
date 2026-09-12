@@ -1,6 +1,5 @@
 name: OWASP ZAP Security Runner
 
-# Dynamic Run Name displays the target URL in the Actions list
 run-name: ZAP Scan on ${{ github.event.inputs.target_url || 'Default Target' }}
 
 on:
@@ -9,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       target_url:
-        description: 'Enter Target URL to scan (e.g., https://example.com)'
+        description: 'Enter Target URL to scan'
         required: true
         default: 'https://staging.example.com'
       scan_type:
@@ -30,14 +29,16 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # Format target URL to create a safe file string for artifact labeling
       - name: Format Target Label
         id: target_label
+        env:
+          INPUT_TARGET: ${{ github.event.inputs.target_url }}
         run: |
-          TARGET="${{ github.event.inputs.target_url || 'https://staging.example.com' }}"
+          # Use default target if input string is empty
+          TARGET="${INPUT_TARGET:-https://staging.example.com}"
           CLEAN_LABEL=\((echo "\)TARGET" | sed -e 's/https\?:\/\///' -e 's/[^a-zA-Z0-9]/_/g')
-          echo "clean_name=\(CLEAN_LABEL" >>\)GITHUB_OUTPUT
-          echo "target_uri=\(TARGET" >>\)GITHUB_OUTPUT
+          echo "clean_name=\(CLEAN_LABEL" >> "\)GITHUB_OUTPUT"
+          echo "target_uri=\(TARGET" >> "\)GITHUB_OUTPUT"
 
       - name: Run OWASP ZAP Baseline Scan
         if: ${{ inputs.scan_type == 'baseline' || github.event_name == 'push' }}
@@ -58,21 +59,18 @@ jobs:
           token_type: 'GITHUB_TOKEN'
           cmd_options: '-r report_html.html -J report_json.json -w report_md.md'
 
-      # Publish scan results directly to the GitHub Job Summary page
       - name: Publish Report Summary to GitHub UI
         if: always()
         run: |
-          echo "## 🛡️ OWASP ZAP Vulnerability Report" >> $GITHUB_STEP_SUMMARY
-          echo "**Target Scanned:** \`\({{ steps.target_label.outputs.target_uri }}\`" >>\)GITHUB_STEP_SUMMARY
-          echo "**Scan Type:** \`\({{ github.event.inputs.scan_type || 'baseline' }}\`" >>\)GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 🛡️ OWASP ZAP Vulnerability Report" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Target Scanned:** \`\({{ steps.target_label.outputs.target_uri }}\`" >> "\)GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
           if [ -f "report_md.md" ]; then
-            cat report_md.md >> $GITHUB_STEP_SUMMARY
+            cat report_md.md >> "$GITHUB_STEP_SUMMARY"
           else
-            echo "⚠️ Markdown report file was not generated." >> $GITHUB_STEP_SUMMARY
+            echo "⚠️ Markdown report file was not generated." >> "$GITHUB_STEP_SUMMARY"
           fi
 
-      # Upload downloadable HTML and JSON artifacts
       - name: Upload Report Artifacts
         if: always()
         uses: actions/upload-artifact@v4
