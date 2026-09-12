@@ -1,4 +1,3 @@
-```yaml
 name: OWASP ZAP Baseline Scan
 
 run-name: ZAP Scan on ${{ inputs.target_url || 'https://owasp.org/www-project-webgoat' }}
@@ -47,4 +46,3 @@ jobs:
             report_json.json
             report_md.md
           if-no-files-found: warn
-```
